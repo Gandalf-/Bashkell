@@ -41,19 +41,19 @@ cons(){ echo "$@"; }
 cdr() { shift; echo "$@"; }
 car() { echo "$1"; }
 
-cadr() { . car . cdr "$@"; }
-cddr() { . cdr . cdr "$@"; }
+cadr() { .. car . cdr "$@"; }
+cddr() { .. cdr . cdr "$@"; }
 
 length() { echo "${#@}"; }
-append() { echo "${@:2} ${1}"; }
+append() { echo "${*:2} ${1}"; }
 reverse(){ for ((i=$#; i >= 1; i--)); do echo "${!i}"; done | xargs ; }
 
-drop(){ echo ${@:2:$(($# - $1 - 1))}; }
-take(){ echo ${@:2:$1}; }
-last() { . car . reverse "$@"; }
+drop(){ echo "${*:2:$(($# - $1 - 1))}"; }
+take(){ echo "${*:2:$1}"; }
+last() { .. car . reverse "$@"; }
 
-list_tail(){ n=$1; shift; echo ${@:(-$n)}; }
-list_ref() { echo ${@:$(( $1 + 2)):1 }; }
+list_tail(){ n=$1; shift; echo "${*:(-$n)}"; }
+list_ref() { echo "${*:$(( $1 + 2)):1 }"; }
 
 where() {
   : ' variable = expression
@@ -64,16 +64,16 @@ where() {
   '
   local var="$1"; shift ; shift
   "$@" >&5
-  read ${var} <&5
+  read -r "${var}" <&5
 }
 
 assign() {
   local var="$1"; shift
   "$@" >&5
-  read ${var} <&5
+  read -r "${var}" <&5
 }
 
-.() {
+..() {
   : ' function, ... -> any
   evaluates an arbitrary number of curried functions from right to left
   . mul 5 . add 5 . sub 10 5 -> 50
@@ -87,7 +87,7 @@ assign() {
     previous="$(eval "${args[i]}""$previous" )"
   done
 
-  echo $previous
+  echo "$previous"
 }
 
 map() {
@@ -114,11 +114,11 @@ map() {
   else
 
     while not empty "$list1" && not empty "$list2"; do
-      where arg1 = car $list1
-      where arg2 = car $list2
+      where arg1 = car "$list1"
+      where arg2 = car "$list2"
       eval "$func $arg1 $arg2"
-      where list1 = cdr $list1
-      where list2 = cdr $list2
+      where list1 = cdr "$list1"
+      where list2 = cdr "$list2"
     done | xargs
   fi
 }
@@ -138,10 +138,10 @@ foldl() {
   list="${args[2]}"
 
   for elem in $list; do
-    where init = eval $func $init $elem
+    where init = eval "$func $init $elem"
   done
 
-  echo $init
+  echo "$init"
 }
 
 filter() {
@@ -155,14 +155,14 @@ filter() {
   where list = cdr "${args[@]}"
 
   for elem in $list; do
-    if $(eval "$func" "$elem"); then
+    if eval "$func" "$elem"; then
       echo "$elem"
     fi
   done | xargs
 }
 
 lambda() {
-  eval "function _lambda() { eval "$@"; }"
+  eval "function _lambda() { eval $* ; }"
   export -f _lambda
   echo _lambda
 }
@@ -180,22 +180,22 @@ flip() {
 }
 
 sum() { foldl add, 0, "$@"; }
-avg() { . div $(sum "$@") . length "$@"; }
+avg() { .. div "$(sum "$@")" . length "$@"; }
 srt() { printf '%s\n' "$@" | sort -n; }
 rand() { for ((i=0; i < $1; i++)); do echo $RANDOM; done | xargs; }
 
 examples() {
-  . reverse . cdr . reverse {a..f}
-  . car . cdr . cdr {a..e}
+  .. reverse . cdr . reverse {a..f}
+  .. car . cdr . cdr {a..e}
   map 'echo -n', {a..e}
-  . echo . cdr . map echo, {a..f}
-  . cons foo . map mul 5 , . cdr {1..5}
+  .. echo . cdr . map echo, {a..f}
+  .. cons foo . map mul 5 , . cdr {1..5}
   map 'rot13 <<<', Hello there foo
-  . mul 5 . add 1 . add 2 3
-  . echo a. echo b. echo c
+  .. mul 5 . add 1 . add 2 3
+  .. echo a. echo b. echo c
   foldl add , 10 , {1..10}
-  . map echo , . reverse {a..f}
+  .. map echo , . reverse {a..f}
   drop 3 {1..10}
-  . reverse . list_tail 5 . take 50 {1..100}
-  . filter not even , . map mod 5 , {1..100}
+  .. reverse . list_tail 5 . take 50 {1..100}
+  .. filter not even , . map mod 5 , {1..100}
 }
