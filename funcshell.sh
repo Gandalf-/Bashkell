@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# usage: 
+# usage:
 #  source functional.sh
 #  echo "done!"
 
@@ -10,15 +10,15 @@ mkfifo ${tmp_fifo}
 exec 5<>${tmp_fifo}
 
 # core
-add() { 
+add() {
   if int "$1" && int "$2"; then echo $(( $1 + $2 ))
   else bc <<< "scale=4; $1 + $2"; fi
 }
-sub() { 
+sub() {
   if int "$1" && int "$2"; then echo $(( $1 - $2 ))
   else bc <<< "scale=4; $1 - $2"; fi
 }
-mul() { 
+mul() {
   if int "$1" && int "$2"; then echo $(( $1 * $2 ))
   else bc <<< "scale=4; $1 * $2"; fi
 }
@@ -26,15 +26,15 @@ div() {
   if int "$1" && int "$2"; then echo $(( $1 / $2 ))
   else bc <<< "scale=4; $1 / $2"; fi
 }
-mod() { 
+mod() {
   if int "$1" && int "$2"; then echo $(( $2 % $1 ))
   else bc <<< "scale=4; $2 % $1"; fi
 }
 
 odd() { [[ $(( $1 % 2 )) == 1 ]]; }
 even(){ [[ $(( $1 % 2 )) == 0 ]]; }
-not() { eval "$@"; if ! (($?)); then false; fi; }
-empty(){ [[ -z "$@" ]]; }
+not() { eval "$@" && false; }
+empty(){ [[ -z "$*" ]]; }
 int() { [[ "$1" -eq "$1" ]] 2>/dev/null; }
 
 cons(){ echo "$@"; }
@@ -182,7 +182,7 @@ flip() {
 sum() { foldl add, 0, "$@"; }
 avg() { .. div "$(sum "$@")" . length "$@"; }
 srt() { printf '%s\n' "$@" | sort -n; }
-rand() { for ((i=0; i < $1; i++)); do echo $RANDOM; done | xargs; }
+rand() { for ((i=0; i < ${1:-1}; i++)); do echo $RANDOM; done | xargs; }
 
 examples() {
   .. reverse . cdr . reverse {a..f}
